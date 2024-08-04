@@ -1,4 +1,9 @@
-#include <bits/stdc++.h>
+#include <algorithm>
+#include <limits.h>
+#include <chrono>
+#include <iostream>
+#include <random>
+#include <utility>
 using namespace std;
 //variables
 auto rng = default_random_engine{std::chrono::system_clock::now().time_since_epoch().count()};//rng for shuffling
@@ -21,6 +26,8 @@ int nn = 0;//how many hands are there in total ie. from splits
 int si = 0;//how many cards have been dealt
 int rc = 0;//running count
 int cnt = 0;//true count
+int total = 0;
+int soft = 0;
 //game rules
 int surrender = 0;
 int insurance = 1;
@@ -36,7 +43,10 @@ int numPen = penetration * 52;
 int iterations = 1000;
 double bankroll = 1000;
 double goal = 2000;
-int debug = 0;
+int debug = 1;
+int maxBet = 1;
+int minBet = 1;
+int maxRisk = 1;
 //functions:try to keep number of functions as low as possible
 void assignArray(int a[7], int b[7]);
 void shuffle();//shuffles shoe
@@ -46,6 +56,43 @@ double doRound();//returns number of bets won or lost
 int doHand();//plays a single hand, returns the total of the hand
 int tc();//returns true count aka running count divided by number of decks remaining
 int main(){
+    char c;
+    cout << "debug:";
+    cin >> debug;
+    if (!debug) {
+        cout << "Surrender allowed[y/n]:";
+        cin >> c;
+        surrender = c == 'y';
+        cout << "Insurance allowed[y/n]:";
+        cin >> c;
+        insurance = c == 'y';
+        cout << "Double after split allowed[y/n]:";
+        cin >> c;
+        doubleAfterSplit = c == 'y';
+        cout << "Max number of splits allowed:";
+        cin >> maxSplits;
+        cout << "Dealer stands on all 17[y/n]:";
+        cin >> c;
+        s17 = c == 'y';
+        cout << "Blackjack payoff:";
+        cin >> blackJackPayOff;
+        cout << "Number of decks:";
+        cin >> numDeck;
+        cout << "Number of decks under cut card:";
+        cin >> penetration;
+        cout << "Iterations:";
+        cin >> iterations;
+        cout << "Bankroll:";
+        cin >> bankroll;
+        cout << "Goal:";
+        cin >> goal;
+        cout << "Max bet:";
+        cin >> maxBet;
+        cout << "Min bet:";
+        cin >> minBet;
+        cout << "Max risk in %:";
+        cin >> maxRisk;
+    }
     for (int i = 2; i <= 21; i++){//player hand total, initialize hard counts first. Hit or stand?
         for (int j = 1; j <= 10; j++){//dealer hand total
             switch (i) {
@@ -193,22 +240,105 @@ int main(){
     sr[0][16][10] = 1;
     sr[0][16][1] = 1;
     sr[0][15][1] = !s17;
-    int temp[7] = {1, 1, 2, 3, 5, 8, 10};
-    assignArray(spread, temp);
-    int x = 0;
-    for (int i = 0; i < iterations; i++){
-        if (simulate().second < bankroll) x++;
+    if (debug) {
+        int temp[7] = {1, 1, 2, 3, 5, 8, 10};
+        assignArray(spread, temp);
+        cout << simulate().second;
+        return 0;
     }
-    cout << x << endl;
+    int optimal[7] = {0};
+    int safest[7] = {0};
+    int possible = 0;
+    int optHands = INT_MAX;
+    double avg = 0;
+    int fails = 0;
+    int hands = 0;
+    int safeFails = INT_MAX;
+    int numSpread = 0;
+    for (int s6 = minBet; s6 <= maxBet; s6++){
+        for (int s5 = minBet; s5 <= s6; s5++){
+            for (int s4 = minBet; s4 <= s5; s4++){
+                for (int s3 = minBet; s3 <= s4; s3++){
+                    for (int s2 = minBet; s2 <= s3; s2++){
+                        for (int s1 = minBet; s1 <= s2; s1++){
+                            numSpread++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    int currentSpread = 0;
+    int tens = 0;
+    for (int s6 = minBet; s6 <= maxBet; s6++){
+        for (int s5 = minBet; s5 <= s6; s5++){
+            for (int s4 = minBet; s4 <= s5; s4++){
+                for (int s3 = minBet; s3 <= s4; s3++){
+                    for (int s2 = minBet; s2 <= s3; s2++){
+                        for (int s1 = minBet; s1 <= s2; s1++){
+                            //cout << "Spread " << currentSpread++ << " of " << numSpread << endl;
+                            currentSpread++;
+                            int temp[7] = {minBet, s1, s2, s3, s4, s5, s6};
+                            assignArray(spread, temp);
+                            fails = 0;
+                            hands = 0;
+                            tens = 0;
+                            for (int i = 1; i <= iterations; i++){
+                                tens = i / (iterations / 10);
+                                cout << "\rSpread " << currentSpread << " of " << numSpread << " [";
+                                for (int j = 0; j < tens; j++) cout << '*';
+                                for (int j = 0; j < 10 - tens; j++) cout << " ";
+                                cout << "]";
+                                cout.flush();
+                                pair<int, double> res = simulate();
+                                if (res.second < bankroll) {
+                                    fails++;
+                                    continue;
+                                }
+                                hands += res.first;
+                            }
+                            //cout << endl;
+                            if (fails <= iterations/100 * maxRisk) possible = 1;
+                            if (possible && fails <= iterations/100 * maxRisk){
+                                if (hands < optHands){
+                                    avg = (double)(goal - bankroll)/(hands/(iterations-fails));
+                                    optHands = hands;
+                                    assignArray(optimal, spread);
+                                }
+                            } else {
+                                if (fails < safeFails){ 
+                                    avg = (double)(goal - bankroll)/(hands/(iterations-fails));
+                                    assignArray(safest, spread);
+                                    safeFails = fails;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cout << endl;
+    if (possible){
+        cout << "It is possible to keep risk that low. Optimum spread:";
+        cout << optimal[0];
+        for (int i = 1; i <= 6; i++) cout << ", " << optimal[i];
+        cout << " average per hand:" << avg << endl;
+    } else {
+        cout << "Not possible. Safest spread:";
+        cout << safest[0];
+        for (int i = 1; i <= 6; i++) cout << ", " << safest[i];
+        cout << " average per hand:" << avg << endl;
+    }
 }
 void shuffle(){
     si = 0;
     for (int x = 0; x < numDeck; x++){
-    for (int i = 0; i < 4; i++){
-        for (int j = 1; j <= 13; j++){//aces are treated as 1 initially
-             shoe[si++] = min(10, j);
+        for (int i = 0; i < 4; i++){
+            for (int j = 1; j <= 13; j++){//aces are treated as 1 initially
+                shoe[si++] = min(10, j);
+            }
         }
-    }
     }
     shuffle(shoe, shoe + numCards, rng);
     si = 0;
@@ -263,12 +393,12 @@ double doRound(){
     rc += counts[newHand[2][0]];
     dealer[1] = shoe[si++];
     rc += counts[dealer[1]];
-    int total = 0;
+    total = 0;
     int dealerRan = 0;
     int dealerTotal = 0;
     for (ni = 0; ni < nn; ni++){
         total = 0;
-        int soft = 0;
+        soft = 0;
         hi = 2;
         splits = newHand[0][ni];
         hand[0] = newHand[1][ni];
@@ -315,9 +445,9 @@ double doRound(){
                 }
                 hand[2] = shoe[si++];
                 rc += counts[hand[2]];
-                total = 0;
-                for (int i = 0; i < 3; i++) total += hand[i];
-                if (total <= 11 && *min_element(hand, hand + 3) == 1) total += 10;
+                total += hand[2];
+                if (hand[2] == 1 && total <= 11) total += 10;
+                else if (soft && total > 21) total -= 10;
                 totals[0][ni] = total;
                 totals[1][ni] = 2;
                 if (debug) {
@@ -337,7 +467,7 @@ double doRound(){
             continue;
         }
         if (dealerRan == 0){//dealer only runs if there is a non-bust hand
-            int soft = 0;
+            soft = 0;
             dealerRan = 1;
             dealerTotal = dealer[0] + dealer[1];
             if (*min_element(dealer, dealer + 2) == 1 && dealerTotal <= 11) {
@@ -350,13 +480,13 @@ double doRound(){
                     if (soft == 0) break;
                 }
                 dealer[di] = shoe[si++];
-                rc += counts[dealer[di++]];
-                dealerTotal = 0;
-                for (int j = 0; j < di; j++) dealerTotal += dealer[j];
-                if (*min_element(dealer, dealer + di) == 1 && dealerTotal <= 11){
-                    soft = 1;
+                rc += counts[dealer[di]];
+                dealerTotal += dealer[di];
+                if (dealer[di++] == 1 && dealerTotal <= 11) {
                     dealerTotal += 10;
-                } else {
+                    soft = 1;
+                } else if (dealerTotal > 21 && soft){
+                    dealerTotal -= 10;
                     soft = 0;
                 }
             }
@@ -390,12 +520,12 @@ int doHand(){
     int ret = 0;
     int decision = 0;
     int soft = 0; 
-        if (debug){
-            cout << hand[0];
-            for (int i = 1; i < hi; i++) cout << "/" << hand[i];
-            cout << " vs " << dealer[0] << endl;
-        }
-    for (int i = 0; i < hi; i++) ret += hand[i];
+    if (debug){
+        cout << hand[0];
+        for (int i = 1; i < hi; i++) cout << "/" << hand[i];
+        cout << " vs " << dealer[0] << endl;
+    }
+    ret = hand[0] + hand[1];
     if (ret <= 11 && *min_element(hand, hand + hi) == 1) {
         ret += 10;
         soft = 1;
@@ -407,15 +537,16 @@ int doHand(){
             return ret;
         }
         hand[hi] = shoe[si++];
-        rc += counts[hand[hi++]];
-        ret = 0;
-        soft = 0;
-        for (int i = 0; i < hi; i++) ret += hand[i];
-        if (debug) cout << "hit " << shoe[si-1] << endl;
-        if (ret <= 11 && *min_element(hand, hand + hi) == 1) {
+        rc += counts[hand[hi]];
+        ret += hand[hi];
+        if (ret <= 11 && hand[hi++] == 1) {
             ret += 10;
             soft = 1;
+        } else if (ret > 21 && soft) {
+            ret -= 10;
+            soft = 0;
         }
+        if (debug) cout << "hit " << shoe[si-1] << endl;
         if (debug){
             cout << hand[0];
             for (int i = 1; i < hi; i++) cout << "/" << hand[i];

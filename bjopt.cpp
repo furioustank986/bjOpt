@@ -8,10 +8,10 @@ using namespace std;
 //variables
 auto rng = default_random_engine{std::chrono::system_clock::now().time_since_epoch().count()};//rng for shuffling
 int shoe[1000];//the shoe
-int hs[2][50][200] = {0};//should hit? is soft, my total, dealer upcard
-int sp[50][200] = {0};//should split?
-int db[2][50][200] = {0};//should double?
-int sr[2][50][200] = {0};//should surrender?
+int hs[2][22][11] = {0};//should hit? is soft, my total, dealer upcard
+int sp[12][11] = {0};//should split?
+int db[2][22][11] = {0};//should double?
+int sr[2][22][11] = {0};//should surrender?
 int hand[50];//player hand
 int dealer[50];//dealer hand
 int newHand[3][50];//stores how many splits deep, card 1, card 2
@@ -54,7 +54,7 @@ pair<int, double> simulate();//returns number of rounds played; then the bankrol
 int doShoe(double &br);//returns number of rounds played
 double doRound();//returns number of bets won or lost
 int doHand();//plays a single hand, returns the total of the hand
-int tc();//returns true count aka running count divided by number of decks remaining
+inline int tc();//returns true count aka running count divided by number of decks remaining
 int main(){
     char c;
     cout << "debug:";
@@ -343,7 +343,7 @@ void shuffle(){
     shuffle(shoe, shoe + numCards, rng);
     si = 0;
 }
-int tc(){
+inline int tc(){
     int ret = rc;
     if (numCards == si) return ret;
     ret /= (numCards-si)/52;
@@ -404,13 +404,13 @@ double doRound(){
         hand[0] = newHand[1][ni];
         hand[1] = newHand[2][ni];
         total = hand[0] + hand[1];
-        if (total <= 11 && *min_element(hand, hand + 2) == 1) {
+        if (total <= 11 && (hand[0] == 1 || hand[1] == 1)) {
             total += 10;
             soft = 1;
         }
-        if (splits == 0 && *max_element(hand, hand + 2) == 10 && *min_element(hand, hand + 2) == 1){//in case player has a blackJack
+        if (splits == 0 && total == 21){//in case player has a blackJack
             if (debug) cout << "blackjack" << endl;
-            if (*max_element(dealer, dealer + 2) == 10 && *min_element(dealer, dealer + 2) == 1) return 0;//in case dealer has a blackJack, it's a push
+            if (dealer[0] + dealer[1] == 11 && (dealer[0] == 1 || dealer[1] == 1)) return 0;//in case dealer has a blackJack, it's a push
             return blackJackPayOff;
         }
         if (insurance && dealer[0] == 1){//check for insurance
@@ -470,7 +470,7 @@ double doRound(){
             soft = 0;
             dealerRan = 1;
             dealerTotal = dealer[0] + dealer[1];
-            if (*min_element(dealer, dealer + 2) == 1 && dealerTotal <= 11) {
+            if ((dealer[0] == 1 || dealer[1] == 1) && dealerTotal <= 11) {
                 dealerTotal += 10;
                 soft = 1;
             }
@@ -526,7 +526,7 @@ int doHand(){
         cout << " vs " << dealer[0] << endl;
     }
     ret = hand[0] + hand[1];
-    if (ret <= 11 && *min_element(hand, hand + hi) == 1) {
+    if (ret <= 11 && (hand[0] == 1 || hand[1] == 1)) {
         ret += 10;
         soft = 1;
     }

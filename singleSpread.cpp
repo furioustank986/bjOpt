@@ -110,11 +110,14 @@ int dbs[22][11] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 thread_local int shoe[1000];//shoe
 int counts[11] = {0, -1, 1, 1, 1, 1, 1, 0, 0, 0, -1};
-int spread[7];
+int spread[7] = {1, 1, 2, 2, 3, 3, 4};
 thread_local int newHands[3][300];
 thread_local int totals[2][300];
 thread_local int hand[300];
 thread_local int dealer[300];
+int numThreads;
+int perThread;
+vector<thread> threads;
 //rules
 int surrender = 0;//surrender allowed?
 int doubleAfterSplit = 1;//double after split allowed?
@@ -402,38 +405,10 @@ void simulate(int begin, int end, int &hands, int &fails){
         else hands += sHands;
     }
 }
-int main(){
-    unsigned int numThreads = thread::hardware_concurrency();
-    if (numThreads == 0) numThreads = 2;
-    cout << numThreads << endl;
-    int perThread = iterations / numThreads;
+pair<int, int> runSim(){//fails, hands
+    threads.clear();
     int hands = 0;
     int fails = 0;
-    if (debug) {
-        bankroll = 1000;
-        goal = 2000;
-        numThreads = 2;
-        perThread = iterations = 1;
-        iterations = 2;
-        maxBet = 1;
-        minBet = 1;
-    }
-    iterations = 1000;
-    vector<thread> threads;
-    bankroll = 500;
-    hands = fails = 0;
-    if (debug || 1) {
-        spread[0] = 1;
-        spread[1] = 1;
-        spread[2] = 1;
-        spread[3] = 1;
-        spread[4] = 1;
-        spread[5] = 1;
-        spread[6] = 1;
-    }
-    if (!s17){
-        //h17 differences
-    }
     for (int i = 0; i < numThreads; i++){
         int start = i * perThread;
         int end = i == numThreads - 1 ? iterations : start + perThread;
@@ -451,6 +426,33 @@ int main(){
     for (auto& t : threads){
         t.join();                        
     }
-    cout << "EV per Hand:" << (double)(goal - bankroll)/(hands/(iterations-fails));
-    cout << "\nRisk of Ruin:" << (double)fails/iterations * 100 << "%";
+    return {fails, hands};
+}
+int main(){
+    numThreads = thread::hardware_concurrency();
+    if (numThreads == 0) numThreads = 2;
+    cout << numThreads << endl;
+    perThread = iterations / numThreads;
+    int hands = 0;
+    int fails = 0;
+    if (debug) {
+        bankroll = 1000;
+        goal = 2000;
+        numThreads = 2;
+        perThread = iterations = 1;
+        iterations = 2;
+        maxBet = 1;
+        minBet = 1;
+    }
+    iterations = 1000;
+    bankroll = 500;
+    if (!s17){
+        //h17 differences
+    }
+    int fs, hs;
+    auto a = runSim();
+    fs = a.first;
+    hs = a.second;
+    cout << "EV per Hand:" << (double)(goal - bankroll)/(hs/(iterations-fs));
+    cout << "\nRisk of Ruin:" << (double)fs/iterations * 100 << "%";
 }

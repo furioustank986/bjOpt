@@ -110,7 +110,7 @@ int dbs[22][11] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 thread_local int shoe[1000];//shoe
 int counts[11] = {0, -1, 1, 1, 1, 1, 1, 0, 0, 0, -1};
-int spread[7] = {1, 1, 2, 2, 3, 3, 4};
+int spread[7] = {1, 2, 3, 4, 5, 6, 7};
 thread_local int newHands[3][300];
 thread_local int totals[2][300];
 thread_local int hand[300];
@@ -445,14 +445,80 @@ int main(){
         minBet = 1;
     }
     iterations = 1000;
-    bankroll = 500;
+    bankroll = 1000;
+    goal = 2000;
     if (!s17){
         //h17 differences
     }
     int fs, hs;
-    auto a = runSim();
-    fs = a.first;
-    hs = a.second;
-    cout << "EV per Hand:" << (double)(goal - bankroll)/(hs/(iterations-fs));
-    cout << "\nRisk of Ruin:" << (double)fs/iterations * 100 << "%";
+    //auto a = runSim();
+    //fs = a.first;
+    //hs = a.second;
+    int minBet = 1;
+    int maxBet = 10;
+    int totalSpread = 0;
+    for (int s1 = minBet; s1 <= maxBet; s1++){
+        for (int s2 = s1; s2 <= maxBet; s2++){
+            for (int s3 = s2; s3 <= maxBet; s3++){
+                for (int s4 = s3; s4 <= maxBet; s4++){
+                    for (int s5 = s4; s5 <= maxBet; s5++){
+                        for (int s6 = s5; s6 <= maxBet; s6++){
+                            totalSpread++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    int optimal = INT_MAX;
+    int safest = INT_MAX;
+    int risk = 10;
+    risk = iterations / 100 * risk;
+    int currentSpread = 1;
+    int possible = 0;
+    int optimals[7] = {1, 0, 0, 0, 0, 0, 0};
+    int optf = 0;
+    for (int s1 = minBet; s1 <= maxBet; s1++){
+        for (int s2 = s1; s2 <= maxBet; s2++){
+            for (int s3 = s2; s3 <= maxBet; s3++){
+                for (int s4 = s3; s4 <= maxBet; s4++){
+                    for (int s5 = s4; s5 <= maxBet; s5++){
+                        for (int s6 = s5; s6 <= maxBet; s6++){
+                            cout << "\rSpread " << currentSpread++ << " of " << totalSpread << flush;
+                            spread[1] = s1;
+                            spread[2] = s2;
+                            spread[3] = s3;
+                            spread[4] = s4;
+                            spread[5] = s5;
+                            spread[6] = s6;
+                            auto a = runSim();
+                            fs = a.first;
+                            hs = a.second;
+                            if (fs <= risk){
+                                possible = 1;
+                                if (hs < optimal) {
+                                    optf = fs;
+                                    optimal = hs;
+                                    optimals[1] = s1;
+                                    optimals[2] = s2;
+                                    optimals[3] = s3;
+                                    optimals[4] = s4;
+                                    optimals[5] = s5;
+                                    optimals[6] = s6;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (!possible) cout << endl << "impossible for that risk." << endl;
+    else {
+        cout << endl;
+        for (int i: optimals) cout << i << " ";
+        cout << endl << double(goal - bankroll)/(iterations - optf) << endl;
+    }
+    //cout << "EV per Hand:" << (double)(goal - bankroll)/(hs/(iterations-fs));
+    //cout << "\nRisk of Ruin:" << (double)fs/iterations * 100 << "%";
 }

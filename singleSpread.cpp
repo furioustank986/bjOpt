@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <limits.h>
+#include <string>
 using namespace std;
 //rules
 int surrender = 0;//surrender allowed?

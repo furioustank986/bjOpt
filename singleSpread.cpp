@@ -454,6 +454,7 @@ int main(){
     perThread = iterations / numThreads;
     int hands = 0;
     int fails = 0;
+    sr[15][10] = sr[16][10] = sr[16][9] = sr[16][1] = 1;
     if (debug) {
         bankroll = 1000;
         goal = 2000;
@@ -465,6 +466,10 @@ int main(){
     }
     if (!s17){
         //h17 differences
+        dbs[18][2] = 1;
+        dbs[19][6] = 1;
+        dbh[11][1] = 1;
+        sr[15][1] = sr[17][1] = 1;
     }
     if (!doubleAfterSplit){
         //DAS changes

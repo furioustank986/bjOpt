@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 #include <limits.h>
 using namespace std;
 //variables
@@ -132,11 +133,29 @@ double blackJackModifier = 1.5;
 //parameters
 int iterations = 1000;
 int minBet = 1;
-int maxBet = 10;
-int bankroll = 1000;
-int goal = 2000;
+int maxBet = 5;
+int bankroll = 300;
+int goal = 600;
+int risk = 25;
 double riskOfRuin = 1;
 int debug = 0;
+//struct for saving results
+struct Spread {
+    int c0 = 0;
+    int c1 = 0;
+    int c2 = 0;
+    int c3 = 0;
+    int c4 = 0;
+    int c5 = 0;
+    int c6 = 0;//bet at counts
+    double ev = 0;//ev per hand
+    double risk = 0;//risk in%
+};
+vector<Spread> resultsVector;
+int compare(Spread s1, Spread s2){
+    if (s1.risk != s2.risk) return s1.risk < s2.risk;
+    else return s1.ev > s2.ev;
+}
 //functions
 void simulate(int begin, int end, int &hands, int &fails){
     //cout << "\nthread made" << endl;
@@ -447,12 +466,15 @@ int main(){
     if (!s17){
         //h17 differences
     }
+    if (!doubleAfterSplit){
+        //DAS changes
+    }
     int fs, hs;
     //auto a = runSim();
     //fs = a.first;
     //hs = a.second;
     int minBet = 1;
-    int maxBet = 10;
+    int maxBet = 5;
     int totalSpread = 0;
     for (int s1 = minBet; s1 <= maxBet; s1++){
         for (int s2 = s1; s2 <= maxBet; s2++){
@@ -467,24 +489,22 @@ int main(){
             }
         }
     }
-    iterations = 1000;
-    bankroll = 300;
-    goal = 600;
     int safest = INT_MAX;
     int optimal = INT_MAX;
-    int risk = 25;
     risk = iterations / 100 * risk;
     int currentSpread = 1;
     int possible = 0;
     int optimals[7] = {1, 0, 0, 0, 0, 0, 0};
     int optf = 0;
     perThread = iterations / numThreads;
+    spread[0] = optimals[0] = minBet;
     for (int s1 = minBet; s1 <= maxBet; s1++){
         for (int s2 = s1; s2 <= maxBet; s2++){
             for (int s3 = s2; s3 <= maxBet; s3++){
                 for (int s4 = s3; s4 <= maxBet; s4++){
                     for (int s5 = s4; s5 <= maxBet; s5++){
                         for (int s6 = s5; s6 <= maxBet; s6++){
+                            Spread s = {minBet, s1, s2, s3, s4, s5, s6, 0, 0};
                             cout << "\rSpread " << currentSpread++ << " of " << totalSpread << flush;
                             spread[1] = s1;
                             spread[2] = s2;
@@ -508,6 +528,9 @@ int main(){
                                     optimals[6] = s6;
                                 }
                             }
+                            s.risk = (double)(fs)/iterations * 100;
+                            if (fs != 0) s.ev = double(goal - bankroll)/(hs/(iterations-fs));
+                            resultsVector.push_back(s);
                         }
                     }
                 }
@@ -518,7 +541,15 @@ int main(){
     else {
         cout << endl;
         for (int i: optimals) cout << i << " ";
-        cout << endl << double(goal - bankroll)/((optimal/(iterations-optf)) << endl;
+        cout << endl << double(goal - bankroll)/(optimal/(iterations-optf)) << endl;
+    }
+    sort(resultsVector.begin(), resultsVector.end(), compare);
+    string s = "result.csv";
+    ofstream file;
+    file.open(s);
+    file << "count 0, count 1, count 2, count 3, count 4, count 5, count 6, risk, ev\n";
+    for (Spread s:resultsVector){
+        file << s.c0 << "," << s.c1 << "," << s.c2 << "," << s.c3 << "," << s.c4 << "," << s.c5 << "," << s.c6 << "," << s.risk << "," << s.ev << "\n";
     }
     //cout << "EV per Hand:" << (double)(goal - bankroll)/(hs/(iterations-fs));
     //cout << "\nRisk of Ruin:" << (double)fs/iterations * 100 << "%";

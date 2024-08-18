@@ -22,8 +22,8 @@ int minBet = 1;
 int maxBet = 5;
 int bankroll = 300;
 int goal = 600;
-int risk = 25;
-double riskOfRuin = 1;
+//int risk = 25;
+//double riskOfRuin = 1;
 int debug = 0;
 string fileName = "result.csv";
 //variables
@@ -449,13 +449,55 @@ pair<int, int> runSim(){//fails, hands
     }
     return {fails, hands};
 }
-int main(){
+int main(int argC, char* argV[]){
     numThreads = thread::hardware_concurrency();
     if (numThreads == 0) numThreads = 2;
-    cout << numThreads << endl;
     perThread = iterations / numThreads;
     int hands = 0;
     int fails = 0;
+    string type = "";
+    string arg = "";
+    //cout << argC << ":" << argV[0] << endl;
+    for (int i = 1; i < argC; i += 2){
+        type = argV[i];
+        if (type == "-help") {
+            cout << "parameters: -surrender, -das, -maxSplits, -numDecks, -penetration, -reSplitAces, -blackJackModifier, -iterations, -minBet, -maxBet, -bankroll, -goal, -debug" << endl;
+            return 0;
+        } else {
+            arg = argV[i+1];
+        }
+        if (type == "-s17"){
+            s17 = stoi(arg);
+        } else if (type == "-surrender") {
+            surrender = stoi(arg);
+        } else if (type == "-das") {
+            doubleAfterSplit = stoi(arg);
+        } else if (type == "-maxSplits") {
+            maxSplits = stoi(arg);
+        } else if (type == "-numDecks") {
+            numDecks = stoi(arg);
+        } else if (type == "-penetration") {
+            penetration = stoi(arg);
+        } else if (type == "-reSplitAces") {
+            reSplitAces = stoi(arg);
+        } else if (type == "-blackJackModifier") {
+            blackJackModifier = stod(arg);
+        } else if (type == "-iterations") {
+            iterations = stoi(arg);
+        } else if (type == "-minBet") {
+            minBet = stoi(arg);
+        } else if (type == "-maxBet") {
+            maxBet = stoi(arg);
+        } else if (type == "-bankroll") {
+            bankroll = stoi(arg);
+        } else if (type == "-goal") {
+            goal = stoi(arg);
+        } else if (type == "-debug") {
+            debug = stoi(arg);
+        } else if (type == "-o"){
+            fileName = arg;
+        }
+    }
     sr[15][10] = sr[16][10] = sr[16][9] = sr[16][1] = 1;
     if (debug) {
         bankroll = 1000;
@@ -482,8 +524,6 @@ int main(){
     //auto a = runSim();
     //fs = a.first;
     //hs = a.second;
-    int minBet = 1;
-    int maxBet = 5;
     int totalSpread = 0;
     for (int s1 = minBet; s1 <= maxBet; s1++){
         for (int s2 = s1; s2 <= maxBet; s2++){
@@ -498,15 +538,15 @@ int main(){
             }
         }
     }
-    int safest = INT_MAX;
-    int optimal = INT_MAX;
-    risk = iterations / 100 * risk;
+    //int safest = INT_MAX;
+    //int optimal = INT_MAX;
+    //risk = iterations / 100 * risk;
     int currentSpread = 1;
-    int possible = 0;
-    int optimals[7] = {1, 0, 0, 0, 0, 0, 0};
-    int optf = 0;
+    //int possible = 0;
+    //int optimals[7] = {1, 0, 0, 0, 0, 0, 0};
+    //int optf = 0;
     perThread = iterations / numThreads;
-    spread[0] = optimals[0] = minBet;
+    spread[0] = minBet;
     for (int s1 = minBet; s1 <= maxBet; s1++){
         for (int s2 = s1; s2 <= maxBet; s2++){
             for (int s3 = s2; s3 <= maxBet; s3++){
@@ -524,7 +564,7 @@ int main(){
                             auto a = runSim();
                             fs = a.first;
                             hs = a.second;
-                            if (fs <= risk){
+                            /*if (fs <= risk){
                                 possible = 1;
                                 if (hs < optimal) {
                                     optf = fs;
@@ -536,7 +576,7 @@ int main(){
                                     optimals[5] = s5;
                                     optimals[6] = s6;
                                 }
-                            }
+                            }*/
                             s.risk = (double)(fs)/iterations * 100;
                             if (fs != 0) s.ev = double(goal - bankroll)/(hs/(iterations-fs));
                             resultsVector.push_back(s);
@@ -546,12 +586,14 @@ int main(){
             }
         }
     }
+    /*
     if (!possible) cout << endl << "impossible for that risk." << endl;
     else {
         cout << endl;
         for (int i: optimals) cout << i << " ";
         cout << endl << double(goal - bankroll)/(optimal/(iterations-optf)) << endl;
     }
+    */
     sort(resultsVector.begin(), resultsVector.end(), compare);
     ofstream file;
     file.open(fileName);

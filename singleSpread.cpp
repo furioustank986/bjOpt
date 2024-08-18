@@ -7,6 +7,27 @@
 #include <fstream>
 #include <limits.h>
 using namespace std;
+//rules
+int surrender = 0;//surrender allowed?
+int doubleAfterSplit = 1;//double after split allowed?
+int s17 = 1;//stand on all 17s?
+int maxSplits = 1;//max number of splits allowed?
+int numDecks = 6;//number of decks?
+int penetration = 2;//number of decks under the shoe?
+int numCards = 52 * numDecks;
+int numPen = 52 * penetration;
+int reSplitAces = 1;
+thread_local auto rng = mt19937{random_device{}()};
+double blackJackModifier = 1.5;
+//parameters
+int iterations = 1000;
+int minBet = 1;
+int maxBet = 5;
+int bankroll = 300;
+int goal = 600;
+int risk = 25;
+double riskOfRuin = 1;
+int debug = 0;
 //variables
 mutex mtx;
 int hsh[22][11] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -119,26 +140,6 @@ thread_local int dealer[300];
 int numThreads;
 int perThread;
 vector<thread> threads;
-//rules
-int surrender = 0;//surrender allowed?
-int doubleAfterSplit = 1;//double after split allowed?
-int s17 = 1;//stand on all 17s?
-int maxSplits = 1;//max number of splits allowed?
-int numDecks = 6;//number of decks?
-int penetration = 2;//number of decks under the shoe?
-int numCards = 52 * numDecks;
-int numPen = 52 * penetration;
-thread_local auto rng = mt19937{random_device{}()};
-double blackJackModifier = 1.5;
-//parameters
-int iterations = 1000;
-int minBet = 1;
-int maxBet = 5;
-int bankroll = 300;
-int goal = 600;
-int risk = 25;
-double riskOfRuin = 1;
-int debug = 0;
 //struct for saving results
 struct Spread {
     int c0 = 0;
@@ -281,7 +282,7 @@ void simulate(int begin, int end, int &hands, int &fails){
                         nn = 0;
                         break;
                     }
-                    if (split < maxSplits && hand[0] == hand[1] && sp[hand[0]][dealer[0]]) {
+                    if (split < maxSplits && hand[0] == hand[1] && sp[hand[0]][dealer[0]] && !(!reSplitAces && !split && hand[0] == 1)) {
                         nn++;
                         if (debug) {
                             cout << endl << endl << "SPLIT" << endl;

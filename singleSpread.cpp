@@ -444,9 +444,6 @@ int main(){
         maxBet = 1;
         minBet = 1;
     }
-    iterations = 1000;
-    bankroll = 1000;
-    goal = 2000;
     if (!s17){
         //h17 differences
     }
@@ -470,14 +467,18 @@ int main(){
             }
         }
     }
-    int optimal = INT_MAX;
+    iterations = 1000;
+    bankroll = 300;
+    goal = 600;
     int safest = INT_MAX;
-    int risk = 10;
+    int optimal = INT_MAX;
+    int risk = 25;
     risk = iterations / 100 * risk;
     int currentSpread = 1;
     int possible = 0;
     int optimals[7] = {1, 0, 0, 0, 0, 0, 0};
     int optf = 0;
+    perThread = iterations / numThreads;
     for (int s1 = minBet; s1 <= maxBet; s1++){
         for (int s2 = s1; s2 <= maxBet; s2++){
             for (int s3 = s2; s3 <= maxBet; s3++){
@@ -517,7 +518,7 @@ int main(){
     else {
         cout << endl;
         for (int i: optimals) cout << i << " ";
-        cout << endl << double(goal - bankroll)/(iterations - optf) << endl;
+        cout << endl << double(goal - bankroll)/((optimal/(iterations-optf)) << endl;
     }
     //cout << "EV per Hand:" << (double)(goal - bankroll)/(hs/(iterations-fs));
     //cout << "\nRisk of Ruin:" << (double)fs/iterations * 100 << "%";

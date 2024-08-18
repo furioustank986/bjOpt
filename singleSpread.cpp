@@ -462,7 +462,7 @@ int main(int argC, char* argV[]){
     for (int i = 1; i < argC; i += 2){
         type = argV[i];
         if (type == "-help") {
-            cout << "parameters: -surrender, -das, -maxSplits, -numDecks, -penetration, -reSplitAces, -blackJackModifier, -iterations, -minBet, -maxBet, -bankroll, -goal, -debug, -o" << endl;
+            cout << "parameters: -s17, -surrender, -das, -maxSplits, -numDecks, -penetration, -reSplitAces, -blackJackModifier, -iterations, -minBet, -maxBet, -bankroll, -goal, -debug, -o" << endl;
             return 0;
         } else {
             arg = argV[i+1];

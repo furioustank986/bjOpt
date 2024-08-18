@@ -14,10 +14,7 @@ int s17 = 1;//stand on all 17s?
 int maxSplits = 1;//max number of splits allowed?
 int numDecks = 6;//number of decks?
 int penetration = 2;//number of decks under the shoe?
-int numCards = 52 * numDecks;
-int numPen = 52 * penetration;
 int reSplitAces = 1;
-thread_local auto rng = mt19937{random_device{}()};
 double blackJackModifier = 1.5;
 //parameters
 int iterations = 1000;
@@ -28,6 +25,7 @@ int goal = 600;
 int risk = 25;
 double riskOfRuin = 1;
 int debug = 0;
+string fileName = "result.csv";
 //variables
 mutex mtx;
 int hsh[22][11] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -140,6 +138,9 @@ thread_local int dealer[300];
 int numThreads;
 int perThread;
 vector<thread> threads;
+int numCards = 52 * numDecks;
+int numPen = 52 * penetration;
+thread_local auto rng = mt19937{random_device{}()};
 //struct for saving results
 struct Spread {
     int c0 = 0;
@@ -552,9 +553,8 @@ int main(){
         cout << endl << double(goal - bankroll)/(optimal/(iterations-optf)) << endl;
     }
     sort(resultsVector.begin(), resultsVector.end(), compare);
-    string s = "result.csv";
     ofstream file;
-    file.open(s);
+    file.open(fileName);
     file << "count 0, count 1, count 2, count 3, count 4, count 5, count 6, risk, ev\n";
     for (Spread s:resultsVector){
         file << s.c0 << "," << s.c1 << "," << s.c2 << "," << s.c3 << "," << s.c4 << "," << s.c5 << "," << s.c6 << "," << s.risk << "," << s.ev << "\n";

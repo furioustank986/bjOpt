@@ -472,7 +472,9 @@ int main(){
         sr[15][1] = sr[17][1] = 1;
     }
     if (!doubleAfterSplit){
-        //DAS changes
+        sp[2][2] = sp[2][3] = sp[3][2] = sp[3][3] = 0;
+        sp[6][2] = 0;
+        sp[4][5] = sp[4][6] = 0;
     }
     int fs, hs;
     //auto a = runSim();

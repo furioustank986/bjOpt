@@ -14,7 +14,7 @@ int doubleAfterSplit = 1;//double after split allowed?
 int s17 = 1;//stand on all 17s?
 int maxSplits = 1;//max number of splits allowed?
 int numDecks = 6;//number of decks?
-int penetration = 2;//number of decks under the shoe?
+double penetration = 2;//number of decks under the shoe?
 int reSplitAces = 1;
 double blackJackModifier = 1.5;
 //parameters
@@ -478,7 +478,7 @@ int main(int argC, char* argV[]){
         } else if (type == "-numDecks") {
             numDecks = stoi(arg);
         } else if (type == "-penetration") {
-            penetration = stoi(arg);
+            penetration = stod(arg);
         } else if (type == "-reSplitAces") {
             reSplitAces = stoi(arg);
         } else if (type == "-blackJackModifier") {

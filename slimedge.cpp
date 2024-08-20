@@ -12,17 +12,17 @@ using namespace std;
 //rules
 int surrender = 0;//surrender allowed?
 int doubleAfterSplit = 1;//double after split allowed?
-int s17 = 1;//stand on all 17s?
-int maxSplits = 1;//max number of splits allowed?
+int s17 = 0;//stand on all 17s?
+int maxSplits = 3;//max number of splits allowed?
 int numDecks = 6;//number of decks?
-double penetration = 2;//number of decks under the shoe?
+double penetration = 1.5;//number of decks under the shoe?
 int reSplitAces = 1;
 double blackJackModifier = 1.5;
 //parameters
-int iterations = 10000;
+int iterations = 100000;
 int minBet = 1;
-int maxBet = 10;
-long double bankroll = 500;
+int maxBet = 12;
+long double bankroll = 200;
 int goal = 600;
 int evCentric = 0;
 //int risk = 25;

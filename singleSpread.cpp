@@ -23,6 +23,7 @@ int minBet = 1;
 int maxBet = 5;
 int bankroll = 300;
 int goal = 600;
+int evCentric = 0;
 //int risk = 25;
 //double riskOfRuin = 1;
 int debug = 0;
@@ -156,6 +157,10 @@ struct Spread {
 };
 vector<Spread> resultsVector;
 int compare(Spread s1, Spread s2){
+    if (evCentric) {
+        if (s1.ev != s2.ev) return s1.ev > s2.ev;
+        else return s1.risk < s2.risk;
+    }
     if (s1.risk != s2.risk) return s1.risk < s2.risk;
     else return s1.ev > s2.ev;
 }
@@ -424,7 +429,7 @@ void simulate(int begin, int end, int &hands, int &fails){
             }
         }
         if (br < bankroll) fails++;
-        else hands += sHands;
+        hands += sHands;
     }
 }
 pair<int, int> runSim(){//fails, hands
@@ -462,7 +467,7 @@ int main(int argC, char* argV[]){
     for (int i = 1; i < argC; i += 2){
         type = argV[i];
         if (type == "-help") {
-            cout << "parameters: -s17, -surrender, -das, -maxSplits, -numDecks, -penetration, -reSplitAces, -blackJackModifier, -iterations, -minBet, -maxBet, -bankroll, -goal, -debug, -o" << endl;
+            cout << "parameters: -s17, -surrender, -das, -maxSplits, -numDecks, -penetration, -reSplitAces, -blackJackModifier, -iterations, -minBet, -maxBet, -bankroll, -goal, -debug, -evCentric, -o" << endl;
             return 0;
         } else {
             arg = argV[i+1];
@@ -497,6 +502,8 @@ int main(int argC, char* argV[]){
             debug = stoi(arg);
         } else if (type == "-o"){
             fileName = arg;
+        } else if (type == "-evCentric"){
+            evCentric = stoi(arg);
         }
     }
     sr[15][10] = sr[16][10] = sr[16][9] = sr[16][1] = 1;
@@ -579,7 +586,9 @@ int main(int argC, char* argV[]){
                                 }
                             }*/
                             s.risk = (double)(fs)/iterations * 100;
-                            if (fs != 0) s.ev = double(goal - bankroll)/(hs/(iterations-fs));
+                            double ev = (iterations - fs) * (goal - bankroll) - fs * (goal - bankroll);
+                            ev /= hs;
+                            if (fs != 0) s.ev = ev;
                             resultsVector.push_back(s);
                         }
                     }

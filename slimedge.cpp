@@ -617,7 +617,7 @@ int main(int argC, char* argV[]){
         long double riskOfRuin = 0;
         riskOfRuin = 1 - s.ev/s.risk;
         riskOfRuin /= 1 + s.ev/s.risk;
-        file << riskOfRuin << ",";
+        //file << riskOfRuin << ",";
         riskOfRuin = pow(riskOfRuin, 1/s.risk);//Take this to the power of bankroll to get risk of ruin
         if (s.ev <= 0) riskOfRuin = 1;
         file << s.c0 << "," << s.c1 << "," << s.c2 << "," << s.c3 << "," << s.c4 << "," << s.c5 << "," << s.c6 << "," << riskOfRuin << "," << s.risk << "," << s.ev << "\n";

@@ -8,6 +8,7 @@
 #include <limits.h>
 #include <string>
 #include <cmath>
+#include <numeric>
 using namespace std;
 //rules
 int surrender = 0;//surrender allowed?

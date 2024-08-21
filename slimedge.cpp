@@ -19,11 +19,11 @@ double penetration = 1.5;//number of decks under the shoe?
 int reSplitAces = 1;
 double blackJackModifier = 1.5;
 //parameters
-int iterations = 100000;
+int iterations = 1000000;
 int minBet = 1;
 int maxBet = 12;
-long double bankroll = 200;
-int goal = 600;
+//long double bankroll = 1000;
+//int goal = 600;
 int evCentric = 0;
 //int risk = 25;
 //double riskOfRuin = 1;
@@ -172,7 +172,6 @@ int compare(Spread s1, Spread s2){
 void simulate(int begin, int end){
     //cout << "\nthread made" << endl;
     rng.seed(std::chrono::high_resolution_clock::now().time_since_epoch().count() + std::hash<std::thread::id>{}(std::this_thread::get_id()));
-    double br = bankroll;
     threadHands.clear();
     int temp = 0;
     for (int i = 0; i < numDecks; i++){
@@ -196,7 +195,6 @@ void simulate(int begin, int end){
     int dealerDone = 0;
     int bet = 0;
     int sHands = 0;
-    br = bankroll;
     for (begin; begin < end; begin++){//each round will increment this
         shuffle(shoe, shoe + numCards, rng);
         si = 0;
@@ -248,7 +246,7 @@ void simulate(int begin, int end){
                     //threadHands.push_back(blackJackModifier * bet);
                     earned += blackJackModifier * bet;
                     if (debug) {cout << "blackjack" << endl;
-                        cout << br << endl;
+                        //cout << br << endl;
                     }
                     nn = 0;
                     break;
@@ -280,7 +278,7 @@ void simulate(int begin, int end){
                     nn = 0;
                     if (debug) {
                         cout << "Dealer's blackajck" << endl;
-                        cout << br << endl;
+                        //cout << br << endl;
                     }
                     break;
                 }
@@ -371,7 +369,7 @@ void simulate(int begin, int end){
                     earned -= totals[1][i] * bet;
                     if (debug){
                         cout << totals[0][i] << ": Player busts!" << endl;
-                        cout << br << endl;
+                        //cout << br << endl;
                     }
                 } else {
                     if (!dealerDone) {
@@ -410,7 +408,7 @@ void simulate(int begin, int end){
                         earned += totals[1][i] * bet;
                         if (debug){
                             cout << "dealer busts" << endl;
-                            cout << br << endl;
+                            //cout << br << endl;
                         }
                     }
                     else if (totals[0][i] > total) {
@@ -419,7 +417,7 @@ void simulate(int begin, int end){
                         earned += totals[1][i] * bet;
                         if (debug) {
                             cout << "player win" << endl;
-                            cout << br << endl;
+                            //cout << br << endl;
                         }
                     }
                     else if (totals[0][i] < total) {
@@ -428,7 +426,7 @@ void simulate(int begin, int end){
                         earned -= totals[1][i] * bet;
                         if (debug) {
                             cout << "dealer win" << endl;
-                            cout << br << endl;
+                            //cout << br << endl;
                         }
                     }
                     //else threadHands.push_back(0);//push
@@ -504,21 +502,21 @@ int main(int argC, char* argV[]){
         } else if (type == "-maxBet") {
             maxBet = stoi(arg);
         } else if (type == "-bankroll") {
-            bankroll = stoi(arg);
+            //bankroll = stoi(arg);
         } else if (type == "-goal") {
-            goal = stoi(arg);
+            //goal = stoi(arg);
         } else if (type == "-debug") {
             debug = stoi(arg);
         } else if (type == "-o"){
             fileName = arg;
         } else if (type == "-evCentric"){
-            evCentric = stoi(arg);
+            //evCentric = stoi(arg);
         }
     }
     sr[15][10] = sr[16][10] = sr[16][9] = sr[16][1] = 1;
     if (debug) {
-        bankroll = 1000;
-        goal = 2000;
+        //bankroll = 1000;
+        //goal = 2000;
         numThreads = 2;
         perThread = iterations = 1;
         iterations = 2;
@@ -614,15 +612,15 @@ int main(int argC, char* argV[]){
     */
     ofstream file;
     file.open(fileName);
-    file << ",count 0, count 1, count 2, count 3, count 4, count 5, count 6, ror, sd, ev\n";
+    file << ",count 0, count 1, count 2, count 3, count 4, count 5, count 6, ror before adjustment, sd, ev\n";
     for (Spread s:resultsVector){
         long double riskOfRuin = 0;
         riskOfRuin = 1 - s.ev/s.risk;
         riskOfRuin /= 1 + s.ev/s.risk;
         file << riskOfRuin << ",";
-        riskOfRuin = pow(riskOfRuin, bankroll/s.risk);
+        riskOfRuin = pow(riskOfRuin, 1/s.risk);//Take this to the power of bankroll to get risk of ruin
         if (s.ev <= 0) riskOfRuin = 1;
-        file << s.c0 << "," << s.c1 << "," << s.c2 << "," << s.c3 << "," << s.c4 << "," << s.c5 << "," << s.c6 << "," << riskOfRuin * 100 << "," << s.risk << "," << s.ev << "\n";
+        file << s.c0 << "," << s.c1 << "," << s.c2 << "," << s.c3 << "," << s.c4 << "," << s.c5 << "," << s.c6 << "," << riskOfRuin << "," << s.risk << "," << s.ev << "\n";
     }
     //cout << "EV per Hand:" << (double)(goal - bankroll)/(hs/(iterations-fs));
     //cout << "\nRisk of Ruin:" << (double)fs/iterations * 100 << "%";
